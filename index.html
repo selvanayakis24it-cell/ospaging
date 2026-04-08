@@ -1,161 +1,835 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Page Replacement Simulator</title>
-    <meta
-      name="description"
-      content="A clean, modern landing page for a Java-based page replacement simulator (FIFO, LRU, Optimal)."
-    />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap"
-      rel="stylesheet"
-    />
-    <link rel="stylesheet" href="./styles.css" />
-  </head>
-  <body>
-    <div class="bg">
-      <div class="orb orb--a" aria-hidden="true"></div>
-      <div class="orb orb--b" aria-hidden="true"></div>
-      <div class="orb orb--c" aria-hidden="true"></div>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Page Replacement Simulator</title>
+  <style>
+    :root{
+      --bg: #0b1220;
+      --panel: rgba(255,255,255,.06);
+      --panel2: rgba(255,255,255,.08);
+      --border: rgba(255,255,255,.10);
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --good: #22c55e;
+      --bad: #ef4444;
+      --warn: #f59e0b;
+      --accent: #7c3aed;
+      --accent2:#06b6d4;
+      --shadow: 0 20px 60px rgba(0,0,0,.45);
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      --radius: 16px;
+    }
+    *{ box-sizing: border-box; }
+    body{
+      margin:0;
+      font-family: var(--sans);
+      color: var(--text);
+      background:
+        radial-gradient(1200px 600px at 20% 10%, rgba(124,58,237,.35), transparent 60%),
+        radial-gradient(1200px 600px at 80% 0%, rgba(6,182,212,.25), transparent 55%),
+        radial-gradient(900px 500px at 50% 90%, rgba(34,197,94,.18), transparent 55%),
+        linear-gradient(180deg, #070b14, var(--bg));
+      min-height: 100vh;
+    }
+    .wrap{
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 28px 16px 44px;
+    }
+    .topbar{
+      display:flex;
+      gap:14px;
+      justify-content: space-between;
+      align-items:flex-end;
+      margin-bottom: 16px;
+    }
+    .title{
+      display:flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .title h1{
+      margin:0;
+      font-weight: 800;
+      letter-spacing: .2px;
+      font-size: 24px;
+      line-height: 1.15;
+    }
+    .title .sub{
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .badgeRow{
+      display:flex;
+      gap:10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      align-items: center;
+    }
+    .badge{
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,.05);
+      padding: 8px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      color: var(--muted);
+      backdrop-filter: blur(10px);
+    }
+    .grid{
+      display:grid;
+      grid-template-columns: 360px 1fr;
+      gap: 16px;
+    }
+    @media (max-width: 980px){
+      .grid{ grid-template-columns: 1fr; }
+    }
+    .card{
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.04));
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .cardHeader{
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .cardHeader .h{
+      font-weight: 800;
+      letter-spacing: .2px;
+      font-size: 13px;
+      text-transform: uppercase;
+      color: #f3f4f6;
+    }
+    .cardBody{
+      padding: 16px;
+    }
+    label{
+      display:block;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    input, textarea, select{
+      width:100%;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(8,12,20,.65);
+      color: var(--text);
+      outline: none;
+      transition: border .15s ease, box-shadow .15s ease;
+      font-family: var(--sans);
+    }
+    textarea{ font-family: var(--mono); resize: vertical; min-height: 92px; }
+    input:focus, textarea:focus, select:focus{
+      border-color: rgba(124,58,237,.55);
+      box-shadow: 0 0 0 4px rgba(124,58,237,.15);
+    }
+    .row{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .row3{
+      display:grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+    }
+    .hint{
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 8px;
+      line-height: 1.35;
+    }
+    .btnRow{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .btn{
+      cursor:pointer;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.14);
+      padding: 10px 12px;
+      font-weight: 800;
+      letter-spacing: .2px;
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      transition: transform .05s ease, background .15s ease, border .15s ease;
+      user-select:none;
+    }
+    .btn:hover{ background: rgba(255,255,255,.09); }
+    .btn:active{ transform: translateY(1px); }
+    .btn.primary{
+      border-color: rgba(124,58,237,.35);
+      background: linear-gradient(135deg, rgba(124,58,237,.35), rgba(6,182,212,.22));
+    }
+    .btn.good{
+      border-color: rgba(34,197,94,.35);
+      background: linear-gradient(135deg, rgba(34,197,94,.28), rgba(6,182,212,.18));
+    }
+    .btn.warn{
+      border-color: rgba(245,158,11,.35);
+      background: linear-gradient(135deg, rgba(245,158,11,.26), rgba(124,58,237,.16));
+    }
+    .btn.bad{
+      border-color: rgba(239,68,68,.35);
+      background: linear-gradient(135deg, rgba(239,68,68,.22), rgba(124,58,237,.16));
+    }
+    .miniRow{
+      display:flex;
+      gap:10px;
+      flex-wrap: wrap;
+      align-items:center;
+      margin-top: 12px;
+    }
+    .toggle{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.05);
+      padding: 8px 10px;
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 12px;
+      user-select:none;
+    }
+    .toggle input{ width:auto; }
+    .error{
+      margin-top: 12px;
+      border: 1px solid rgba(239,68,68,.35);
+      background: rgba(239,68,68,.10);
+      padding: 10px 12px;
+      border-radius: 12px;
+      color: #fecaca;
+      font-size: 13px;
+      display:none;
+      line-height: 1.35;
+    }
+    .panel{
+      padding: 14px 16px;
+      border-top: 1px solid var(--border);
+      background: rgba(255,255,255,.03);
+    }
+    .summary{
+      display:flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items:center;
+    }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.05);
+      font-size: 12px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    .pill strong{ color: var(--text); }
+    .pill.best{
+      color: white;
+      border-color: rgba(255,255,255,.18);
+      background: linear-gradient(135deg, rgba(34,197,94,.32), rgba(124,58,237,.26));
+    }
+    .tableWrap{
+      overflow:auto;
+      max-height: 520px;
+    }
+    table{
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--mono);
+      font-size: 12px;
+      min-width: 720px;
+    }
+    thead th{
+      position: sticky;
+      top: 0;
+      background: rgba(8,12,20,.92);
+      backdrop-filter: blur(12px);
+      z-index: 2;
+      border-bottom: 1px solid rgba(255,255,255,.14);
+      color: #f3f4f6;
+      text-align:left;
+      padding: 10px 10px;
+      font-weight: 800;
+      letter-spacing: .2px;
+    }
+    tbody td{
+      padding: 9px 10px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      color: #dbeafe;
+    }
+    tbody tr:hover td{
+      background: rgba(255,255,255,.05);
+    }
+    .hit td{
+      background: rgba(34,197,94,.08);
+    }
+    .fault td{
+      background: rgba(239,68,68,.08);
+    }
+    .status{
+      font-weight: 900;
+      letter-spacing: .2px;
+      font-family: var(--sans);
+      font-size: 12px;
+    }
+    .status.hit{ color: #86efac; }
+    .status.fault{ color: #fecaca; }
+    .kbd{
+      font-family: var(--mono);
+      font-size: 12px;
+      padding: 2px 6px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color: #e5e7eb;
+    }
+    .footerHint{
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="title">
+        <h1>Page Replacement Simulator</h1>
+        <div class="sub">FIFO • LRU • Optimal — step-by-step frames table, faults highlighted, and best-algorithm comparison.</div>
+      </div>
+      <div class="badgeRow">
+        <div class="badge">Tip: Press <span class="kbd">Run All</span> to compare</div>
+        <div class="badge">Fault: <span style="color:#fecaca;font-weight:800;">Yes ✘</span> • Hit: <span style="color:#86efac;font-weight:800;">No ✔</span></div>
+      </div>
     </div>
 
-    <header class="container header">
-      <div class="header__left">
-        <div class="kicker">OS MEMORY LAB</div>
-        <h1 class="title">Page Replacement Simulator</h1>
-        <p class="subtitle">
-          Interactive visual dashboard for <b>FIFO</b>, <b>LRU</b>, and <b>Optimal</b>
-          page replacement—built in Java Swing.
-        </p>
-
-        <div class="cta">
-          <a class="btn btn--primary" href="#run">How to run</a>
-          <a class="btn btn--ghost" href="#algorithms">Algorithms</a>
+    <div class="grid">
+      <div class="card">
+        <div class="cardHeader">
+          <div class="h">Input</div>
+          <div class="badge">Browser-only • No installs</div>
         </div>
+        <div class="cardBody">
+          <div class="row">
+            <div>
+              <label for="pages">Number of pages (optional)</label>
+              <input id="pages" placeholder="e.g., 20" inputmode="numeric" />
+            </div>
+            <div>
+              <label for="frames">Number of frames</label>
+              <input id="frames" placeholder="e.g., 3" inputmode="numeric" />
+            </div>
+          </div>
 
-        <div class="meta">
-          <div class="meta__item">
-            <div class="meta__label">Input</div>
-            <div class="meta__value">Frames + reference string</div>
+          <div style="margin-top:12px;">
+            <label for="ref">Reference string (space-separated integers)</label>
+            <textarea id="ref" spellcheck="false" placeholder="Example: 7 0 1 2 0 3 0 4 2 3 ..."></textarea>
+            <div class="hint">
+              This simulator will process the reference string from left to right. If “Number of pages” doesn’t match its length, the reference length is used.
+            </div>
           </div>
-          <div class="meta__item">
-            <div class="meta__label">Output</div>
-            <div class="meta__value">Step-by-step HIT/FAULT table</div>
+
+          <div class="miniRow">
+            <label class="toggle"><input id="colorize" type="checkbox" checked /> Colorize hits/faults</label>
+            <label class="toggle"><input id="animate" type="checkbox" /> Animate steps</label>
+            <div class="toggle">
+              Delay
+              <select id="delay">
+                <option value="0">0ms</option>
+                <option value="120">120ms</option>
+                <option value="200" selected>200ms</option>
+                <option value="350">350ms</option>
+                <option value="500">500ms</option>
+              </select>
+            </div>
           </div>
-          <div class="meta__item">
-            <div class="meta__label">Best summary</div>
-            <div class="meta__value">Lowest page faults wins</div>
+
+          <div class="btnRow">
+            <button class="btn primary" id="runFifo">Run FIFO</button>
+            <button class="btn good" id="runLru">Run LRU</button>
+            <button class="btn warn" id="runOpt">Run Optimal</button>
+            <button class="btn bad" id="runAll">Run All + Compare</button>
+          </div>
+
+          <div class="btnRow" style="grid-template-columns: 1fr 1fr; margin-top:10px;">
+            <button class="btn" id="loadSample">Load Sample</button>
+            <button class="btn" id="clear">Clear</button>
+          </div>
+
+          <div class="error" id="errorBox"></div>
+          <div class="footerHint">
+            Algorithms use appropriate structures:
+            <span class="kbd">Queue</span> for FIFO,
+            <span class="kbd">Map</span> tracking last-use for LRU,
+            and look-ahead for Optimal.
           </div>
         </div>
       </div>
 
-      <div class="header__right">
-        <div class="card preview">
-          <div class="preview__top">
-            <div class="dot dot--r" aria-hidden="true"></div>
-            <div class="dot dot--y" aria-hidden="true"></div>
-            <div class="dot dot--g" aria-hidden="true"></div>
-            <div class="preview__title">Demo run</div>
+      <div class="card">
+        <div class="cardHeader">
+          <div class="h" id="resultTitle">Result</div>
+          <div class="badge" id="resultMeta">Ready</div>
+        </div>
+
+        <div class="panel">
+          <div class="summary" id="summary">
+            <div class="pill"><strong>Status</strong> <span style="margin-left:6px;">Waiting for input</span></div>
           </div>
-          <pre class="terminal" aria-label="Example output">
-FIFO Simulation
-==============================================================
-Step  Page  F1  F2  F3  Status
-1     7     7   -   -   FAULT
-2     0     7   0   -   FAULT
-3     1     7   0   1   FAULT
-4     2     2   0   1   FAULT
-5     0     2   0   1   HIT
-...
-Faults: 10 | Hits: 3 | Fault Ratio: 0.77</pre
-          >
-          <div class="preview__hint">
-            Tip: Use spaces or commas in the reference string (e.g. <code>7 0 1 2</code> or
-            <code>7,0,1,2</code>).
-          </div>
+        </div>
+
+        <div class="tableWrap">
+          <table id="table">
+            <thead><tr id="theadRow"></tr></thead>
+            <tbody id="tbody"></tbody>
+          </table>
         </div>
       </div>
-    </header>
+    </div>
+  </div>
 
-    <main class="container main">
-      <section class="grid">
-        <article class="card feature">
-          <h2 class="card__title">What you can do</h2>
-          <ul class="list">
-            <li><b>Choose algorithms</b>: FIFO, LRU, Optimal (run any combination).</li>
-            <li><b>Compare quickly</b>: shows total requests and best algorithm.</li>
-            <li><b>Trace every step</b>: frames update per reference with HIT/FAULT status.</li>
-          </ul>
-        </article>
+  <script>
+    // -------------------------
+    // Utilities / validation
+    // -------------------------
+    const $ = (id) => document.getElementById(id);
+    const errorBox = $("errorBox");
 
-        <article id="algorithms" class="card feature">
-          <h2 class="card__title">Algorithms (quick notes)</h2>
-          <div class="pill-row">
-            <span class="pill pill--fifo">FIFO</span>
-            <span class="pill pill--lru">LRU</span>
-            <span class="pill pill--opt">Optimal</span>
-          </div>
-          <div class="algo">
-            <div class="algo__row">
-              <div class="algo__name">FIFO</div>
-              <div class="algo__desc">Replace the oldest page in memory.</div>
-            </div>
-            <div class="algo__row">
-              <div class="algo__name">LRU</div>
-              <div class="algo__desc">Replace the least recently used page.</div>
-            </div>
-            <div class="algo__row">
-              <div class="algo__name">Optimal</div>
-              <div class="algo__desc">Replace the page used farthest in the future.</div>
-            </div>
-          </div>
-        </article>
+    function showError(msg){
+      errorBox.textContent = msg;
+      errorBox.style.display = "block";
+    }
+    function clearError(){
+      errorBox.textContent = "";
+      errorBox.style.display = "none";
+    }
 
-        <article id="run" class="card feature">
-          <h2 class="card__title">How to run</h2>
-          <ol class="steps">
-            <li>
-              Ensure Java is installed:
-              <span class="kbd">java -version</span>
-            </li>
-            <li>
-              Compile:
-              <span class="kbd">javac PageReplacementSimulator.java</span>
-            </li>
-            <li>
-              Run:
-              <span class="kbd">java PageReplacementSimulator</span>
-            </li>
-          </ol>
-          <div class="note">
-            The simulator UI opens as a desktop app. This page is a polished cover sheet you can
-            include in submissions or documentation.
-          </div>
-        </article>
-      </section>
+    function parseIntStrict(s){
+      if(!/^-?\d+$/.test(s)) return null;
+      const n = Number(s);
+      return Number.isFinite(n) ? n : null;
+    }
 
-      <section class="footer card">
-        <div class="footer__left">
-          <div class="footer__title">Made for OS paging experiments</div>
-          <div class="footer__sub">
-            Clean layout, responsive typography, and a theme inspired by the app’s gradient UI.
-          </div>
-        </div>
-        <div class="footer__right">
-          <a class="link" href="./PageReplacementSimulator.java">View source</a>
-          <span class="sep" aria-hidden="true">•</span>
-          <button class="link link--button" id="copyCmd" type="button">
-            Copy run command
-          </button>
-        </div>
-      </section>
-    </main>
+    function parseReferenceString(text){
+      const parts = text.trim().split(/\s+/).filter(Boolean);
+      if(parts.length === 0) return null;
+      const arr = [];
+      for(const p of parts){
+        const n = parseIntStrict(p);
+        if(n === null) return null;
+        arr.push(n);
+      }
+      return arr;
+    }
 
-    <script src="./script.js"></script>
-  </body>
+    function readInput(){
+      clearError();
+      const refText = $("ref").value;
+      const ref = parseReferenceString(refText);
+      if(!ref){
+        showError("Reference string is empty or invalid. Use space-separated integers.");
+        return null;
+      }
+
+      const framesRaw = $("frames").value.trim();
+      const frames = parseIntStrict(framesRaw);
+      if(frames === null || frames <= 0){
+        showError("Number of frames must be a positive integer.");
+        return null;
+      }
+
+      const pagesRaw = $("pages").value.trim();
+      if(pagesRaw.length){
+        const pages = parseIntStrict(pagesRaw);
+        if(pages === null || pages <= 0){
+          showError("Number of pages must be a positive integer (or leave it blank).");
+          return null;
+        }
+        if(pages !== ref.length){
+          // not an error; informational
+          $("resultMeta").textContent = `Note: declared pages (${pages}) ≠ reference length (${ref.length}) — using reference length`;
+        }
+      }
+
+      return { ref, frames };
+    }
+
+    function snapshot(framesArr){
+      return framesArr.slice();
+    }
+
+    function indexOf(arr, val){
+      for(let i=0;i<arr.length;i++) if(arr[i] === val) return i;
+      return -1;
+    }
+
+    // -------------------------
+    // Algorithms
+    // Each returns: { name, framesCount, faults, steps: [{step,page,frames,fault}] }
+    // -------------------------
+
+    // FIFO: Queue for eviction order
+    function simulateFIFO(reference, framesCount){
+      const frames = Array(framesCount).fill(null);
+      const inFrames = new Set();
+      const q = []; // queue of pages in insertion order
+      let faults = 0;
+      const steps = [];
+
+      for(let i=0;i<reference.length;i++){
+        const page = reference[i];
+        let fault = false;
+
+        if(inFrames.has(page)){
+          fault = false;
+        } else {
+          fault = true;
+          faults++;
+
+          const empty = indexOf(frames, null);
+          if(empty !== -1){
+            frames[empty] = page;
+            inFrames.add(page);
+            q.push(page);
+          } else {
+            const victim = q.shift();
+            const victimIdx = indexOf(frames, victim);
+            frames[victimIdx] = page;
+            inFrames.delete(victim);
+            inFrames.add(page);
+            q.push(page);
+          }
+        }
+
+        steps.push({ step: i+1, page, frames: snapshot(frames), fault });
+      }
+
+      return { name: "FIFO", framesCount, faults, steps };
+    }
+
+    // LRU: Map(page -> lastUsedIndex)
+    function simulateLRU(reference, framesCount){
+      const frames = Array(framesCount).fill(null);
+      const inFrames = new Set();
+      const lastUsed = new Map();
+      let faults = 0;
+      const steps = [];
+
+      for(let i=0;i<reference.length;i++){
+        const page = reference[i];
+        let fault = false;
+
+        if(inFrames.has(page)){
+          fault = false;
+        } else {
+          fault = true;
+          faults++;
+
+          const empty = indexOf(frames, null);
+          if(empty !== -1){
+            frames[empty] = page;
+            inFrames.add(page);
+          } else {
+            // choose victim with smallest last-used index
+            let victim = null;
+            let best = Infinity;
+            for(const p of inFrames){
+              const lu = lastUsed.has(p) ? lastUsed.get(p) : -1;
+              if(lu < best){
+                best = lu;
+                victim = p;
+              }
+            }
+            const victimIdx = indexOf(frames, victim);
+            frames[victimIdx] = page;
+            inFrames.delete(victim);
+            inFrames.add(page);
+            lastUsed.delete(victim);
+          }
+        }
+
+        lastUsed.set(page, i);
+        steps.push({ step: i+1, page, frames: snapshot(frames), fault });
+      }
+
+      return { name: "LRU", framesCount, faults, steps };
+    }
+
+    // Optimal: look ahead for next use; evict farthest (or never used again)
+    function simulateOptimal(reference, framesCount){
+      const frames = Array(framesCount).fill(null);
+      const inFrames = new Set();
+      let faults = 0;
+      const steps = [];
+
+      function nextUseIndex(page, start){
+        for(let i=start;i<reference.length;i++){
+          if(reference[i] === page) return i;
+        }
+        return -1;
+      }
+
+      for(let i=0;i<reference.length;i++){
+        const page = reference[i];
+        let fault = false;
+
+        if(inFrames.has(page)){
+          fault = false;
+        } else {
+          fault = true;
+          faults++;
+
+          const empty = indexOf(frames, null);
+          if(empty !== -1){
+            frames[empty] = page;
+            inFrames.add(page);
+          } else {
+            let victim = frames[0];
+            let farthest = -1;
+            for(const p of frames){
+              const next = nextUseIndex(p, i+1);
+              if(next === -1){
+                victim = p; // best immediate victim
+                farthest = Infinity;
+                break;
+              }
+              if(next > farthest){
+                farthest = next;
+                victim = p;
+              }
+            }
+            const victimIdx = indexOf(frames, victim);
+            frames[victimIdx] = page;
+            inFrames.delete(victim);
+            inFrames.add(page);
+          }
+        }
+
+        steps.push({ step: i+1, page, frames: snapshot(frames), fault });
+      }
+
+      return { name: "Optimal", framesCount, faults, steps };
+    }
+
+    // -------------------------
+    // Rendering
+    // -------------------------
+    function setTitle(name, meta){
+      $("resultTitle").textContent = name;
+      $("resultMeta").textContent = meta || "";
+    }
+
+    function renderSummarySingle(result){
+      const algoClass = result.name === "FIFO" ? "fifo" : result.name === "LRU" ? "lru" : "opt";
+      $("summary").innerHTML = `
+        <div class="pill"><strong>Algorithm</strong> <span style="margin-left:6px;">${result.name}</span></div>
+        <div class="pill ${algoClass}"><strong>Page faults</strong> <span style="margin-left:6px;">${result.faults}</span></div>
+        <div class="pill"><strong>Frames</strong> <span style="margin-left:6px;">${result.framesCount}</span></div>
+        <div class="pill"><strong>Steps</strong> <span style="margin-left:6px;">${result.steps.length}</span></div>
+      `;
+    }
+
+    function renderSummaryCompare(fifo, lru, opt){
+      const min = Math.min(fifo.faults, lru.faults, opt.faults);
+      const best = fifo.faults === min ? "FIFO" : lru.faults === min ? "LRU" : "Optimal";
+      $("summary").innerHTML = `
+        <div class="pill"><strong>FIFO faults</strong> <span style="margin-left:6px;">${fifo.faults}</span></div>
+        <div class="pill"><strong>LRU faults</strong> <span style="margin-left:6px;">${lru.faults}</span></div>
+        <div class="pill"><strong>Optimal faults</strong> <span style="margin-left:6px;">${opt.faults}</span></div>
+        <div class="pill best"><strong>Best</strong> <span style="margin-left:6px;">${best} (${min})</span></div>
+      `;
+    }
+
+    function renderTable(result, { colorize }){
+      const head = $("theadRow");
+      const body = $("tbody");
+      head.innerHTML = "";
+      body.innerHTML = "";
+
+      const cols = ["Step", "Page"];
+      for(let i=0;i<result.framesCount;i++) cols.push(`Frame${i+1}`);
+      cols.push("Fault");
+
+      for(const c of cols){
+        const th = document.createElement("th");
+        th.textContent = c;
+        head.appendChild(th);
+      }
+
+      for(const s of result.steps){
+        const tr = document.createElement("tr");
+        if(colorize){
+          tr.className = s.fault ? "fault" : "hit";
+        }
+        const statusText = s.fault ? "Yes ✘ (F)" : "No ✔ (H)";
+        const statusClass = s.fault ? "status fault" : "status hit";
+
+        const tds = [];
+        tds.push(String(s.step));
+        tds.push(String(s.page));
+        for(const v of s.frames){
+          tds.push(v === null ? "-" : String(v));
+        }
+        tds.push(statusText);
+
+        for(let i=0;i<tds.length;i++){
+          const td = document.createElement("td");
+          if(i === tds.length-1){
+            td.innerHTML = `<span class="${statusClass}">${tds[i]}</span>`;
+          } else {
+            td.textContent = tds[i];
+          }
+          tr.appendChild(td);
+        }
+        body.appendChild(tr);
+      }
+    }
+
+    async function renderTableAnimated(result, { colorize, delayMs }){
+      const head = $("theadRow");
+      const body = $("tbody");
+      head.innerHTML = "";
+      body.innerHTML = "";
+
+      const cols = ["Step", "Page"];
+      for(let i=0;i<result.framesCount;i++) cols.push(`Frame${i+1}`);
+      cols.push("Fault");
+      for(const c of cols){
+        const th = document.createElement("th");
+        th.textContent = c;
+        head.appendChild(th);
+      }
+
+      for(const s of result.steps){
+        const tr = document.createElement("tr");
+        if(colorize){
+          tr.className = s.fault ? "fault" : "hit";
+        }
+        const statusText = s.fault ? "Yes ✘ (F)" : "No ✔ (H)";
+        const statusClass = s.fault ? "status fault" : "status hit";
+
+        const tds = [];
+        tds.push(String(s.step));
+        tds.push(String(s.page));
+        for(const v of s.frames){
+          tds.push(v === null ? "-" : String(v));
+        }
+        tds.push(statusText);
+
+        for(let i=0;i<tds.length;i++){
+          const td = document.createElement("td");
+          if(i === tds.length-1){
+            td.innerHTML = `<span class="${statusClass}">${tds[i]}</span>`;
+          } else {
+            td.textContent = tds[i];
+          }
+          tr.appendChild(td);
+        }
+        body.appendChild(tr);
+        await new Promise(r => setTimeout(r, delayMs));
+      }
+    }
+
+    // -------------------------
+    // Event wiring
+    // -------------------------
+    function getRenderOptions(){
+      return {
+        colorize: $("colorize").checked,
+        animate: $("animate").checked,
+        delayMs: Number($("delay").value || "0"),
+      };
+    }
+
+    async function runOne(name){
+      const inData = readInput();
+      if(!inData) return;
+
+      const opts = getRenderOptions();
+      const { ref, frames } = inData;
+
+      let result;
+      if(name === "FIFO") result = simulateFIFO(ref, frames);
+      else if(name === "LRU") result = simulateLRU(ref, frames);
+      else result = simulateOptimal(ref, frames);
+
+      setTitle(`${result.name} — Step-by-step`, `Faults: ${result.faults} • Frames: ${frames} • Length: ${ref.length}`);
+      renderSummarySingle(result);
+      if(opts.animate && opts.delayMs > 0){
+        await renderTableAnimated(result, opts);
+      } else {
+        renderTable(result, opts);
+      }
+    }
+
+    async function runAll(){
+      const inData = readInput();
+      if(!inData) return;
+      const opts = getRenderOptions();
+      const { ref, frames } = inData;
+
+      const fifo = simulateFIFO(ref, frames);
+      const lru  = simulateLRU(ref, frames);
+      const opt  = simulateOptimal(ref, frames);
+
+      setTitle("All Algorithms — Showing Optimal table", `FIFO: ${fifo.faults} • LRU: ${lru.faults} • Optimal: ${opt.faults}`);
+      renderSummaryCompare(fifo, lru, opt);
+
+      if(opts.animate && opts.delayMs > 0){
+        await renderTableAnimated(opt, opts);
+      } else {
+        renderTable(opt, opts);
+      }
+    }
+
+    $("runFifo").addEventListener("click", () => runOne("FIFO"));
+    $("runLru").addEventListener("click", () => runOne("LRU"));
+    $("runOpt").addEventListener("click", () => runOne("Optimal"));
+    $("runAll").addEventListener("click", () => runAll());
+
+    $("loadSample").addEventListener("click", () => {
+      $("pages").value = "20";
+      $("frames").value = "3";
+      $("ref").value = "7 0 1 2 0 3 0 4 2 3 0 3 2 1 2 0 1 7 0 1";
+      clearError();
+      setTitle("Result", "Sample loaded");
+      $("summary").innerHTML = `<div class="pill"><strong>Status</strong> <span style="margin-left:6px;">Sample loaded — press Run All</span></div>`;
+      $("theadRow").innerHTML = "";
+      $("tbody").innerHTML = "";
+    });
+
+    $("clear").addEventListener("click", () => {
+      $("pages").value = "";
+      $("frames").value = "";
+      $("ref").value = "";
+      clearError();
+      setTitle("Result", "Ready");
+      $("summary").innerHTML = `<div class="pill"><strong>Status</strong> <span style="margin-left:6px;">Waiting for input</span></div>`;
+      $("theadRow").innerHTML = "";
+      $("tbody").innerHTML = "";
+    });
+
+    // Preload sample for convenience
+    $("loadSample").click();
+  </script>
+</body>
 </html>
 
