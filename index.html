@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Page Replacement Simulator</title>
+    <meta
+      name="description"
+      content="A clean, modern landing page for a Java-based page replacement simulator (FIFO, LRU, Optimal)."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="bg">
+      <div class="orb orb--a" aria-hidden="true"></div>
+      <div class="orb orb--b" aria-hidden="true"></div>
+      <div class="orb orb--c" aria-hidden="true"></div>
+    </div>
+
+    <header class="container header">
+      <div class="header__left">
+        <div class="kicker">OS MEMORY LAB</div>
+        <h1 class="title">Page Replacement Simulator</h1>
+        <p class="subtitle">
+          Interactive visual dashboard for <b>FIFO</b>, <b>LRU</b>, and <b>Optimal</b>
+          page replacement—built in Java Swing.
+        </p>
+
+        <div class="cta">
+          <a class="btn btn--primary" href="#run">How to run</a>
+          <a class="btn btn--ghost" href="#algorithms">Algorithms</a>
+        </div>
+
+        <div class="meta">
+          <div class="meta__item">
+            <div class="meta__label">Input</div>
+            <div class="meta__value">Frames + reference string</div>
+          </div>
+          <div class="meta__item">
+            <div class="meta__label">Output</div>
+            <div class="meta__value">Step-by-step HIT/FAULT table</div>
+          </div>
+          <div class="meta__item">
+            <div class="meta__label">Best summary</div>
+            <div class="meta__value">Lowest page faults wins</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="header__right">
+        <div class="card preview">
+          <div class="preview__top">
+            <div class="dot dot--r" aria-hidden="true"></div>
+            <div class="dot dot--y" aria-hidden="true"></div>
+            <div class="dot dot--g" aria-hidden="true"></div>
+            <div class="preview__title">Demo run</div>
+          </div>
+          <pre class="terminal" aria-label="Example output">
+FIFO Simulation
+==============================================================
+Step  Page  F1  F2  F3  Status
+1     7     7   -   -   FAULT
+2     0     7   0   -   FAULT
+3     1     7   0   1   FAULT
+4     2     2   0   1   FAULT
+5     0     2   0   1   HIT
+...
+Faults: 10 | Hits: 3 | Fault Ratio: 0.77</pre
+          >
+          <div class="preview__hint">
+            Tip: Use spaces or commas in the reference string (e.g. <code>7 0 1 2</code> or
+            <code>7,0,1,2</code>).
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="container main">
+      <section class="grid">
+        <article class="card feature">
+          <h2 class="card__title">What you can do</h2>
+          <ul class="list">
+            <li><b>Choose algorithms</b>: FIFO, LRU, Optimal (run any combination).</li>
+            <li><b>Compare quickly</b>: shows total requests and best algorithm.</li>
+            <li><b>Trace every step</b>: frames update per reference with HIT/FAULT status.</li>
+          </ul>
+        </article>
+
+        <article id="algorithms" class="card feature">
+          <h2 class="card__title">Algorithms (quick notes)</h2>
+          <div class="pill-row">
+            <span class="pill pill--fifo">FIFO</span>
+            <span class="pill pill--lru">LRU</span>
+            <span class="pill pill--opt">Optimal</span>
+          </div>
+          <div class="algo">
+            <div class="algo__row">
+              <div class="algo__name">FIFO</div>
+              <div class="algo__desc">Replace the oldest page in memory.</div>
+            </div>
+            <div class="algo__row">
+              <div class="algo__name">LRU</div>
+              <div class="algo__desc">Replace the least recently used page.</div>
+            </div>
+            <div class="algo__row">
+              <div class="algo__name">Optimal</div>
+              <div class="algo__desc">Replace the page used farthest in the future.</div>
+            </div>
+          </div>
+        </article>
+
+        <article id="run" class="card feature">
+          <h2 class="card__title">How to run</h2>
+          <ol class="steps">
+            <li>
+              Ensure Java is installed:
+              <span class="kbd">java -version</span>
+            </li>
+            <li>
+              Compile:
+              <span class="kbd">javac PageReplacementSimulator.java</span>
+            </li>
+            <li>
+              Run:
+              <span class="kbd">java PageReplacementSimulator</span>
+            </li>
+          </ol>
+          <div class="note">
+            The simulator UI opens as a desktop app. This page is a polished cover sheet you can
+            include in submissions or documentation.
+          </div>
+        </article>
+      </section>
+
+      <section class="footer card">
+        <div class="footer__left">
+          <div class="footer__title">Made for OS paging experiments</div>
+          <div class="footer__sub">
+            Clean layout, responsive typography, and a theme inspired by the app’s gradient UI.
+          </div>
+        </div>
+        <div class="footer__right">
+          <a class="link" href="./PageReplacementSimulator.java">View source</a>
+          <span class="sep" aria-hidden="true">•</span>
+          <button class="link link--button" id="copyCmd" type="button">
+            Copy run command
+          </button>
+        </div>
+      </section>
+    </main>
+
+    <script src="./script.js"></script>
+  </body>
+</html>
+
